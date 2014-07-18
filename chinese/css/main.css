@@ -1,0 +1,27 @@
+*{
+	margin:0px;
+	padding:0px;
+}
+html,body,main{
+	height : 100%;
+	width : 100%;
+}
+#canvas1,#canvas2,#canvas3{
+	border-style : solid;
+    border-width : 2px;
+	border-color : lightblue;
+}
+canvas{
+	float:left;
+}
+@font-face{
+	font-family: 'kaiti';
+    src: url('font/kaiti.ttf');
+}
+h2{
+	font-size : 50px;
+	display : inline;
+}
+h1{
+	font-size : 30px;
+}

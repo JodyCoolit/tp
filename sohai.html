@@ -1,0 +1,26 @@
+<form name="myForm" action="fu.php" onsubmit="return validateForm()" method="get">
+First name: <input type="text" name="fname">
+<br/>
+A.<input type="radio" name="rb" value="A"/>
+<br/>
+B.<input type="radio" name="rb" value="B"/>
+<br/>
+C.<input type="radio" name="rb" value="C"/>
+<input type="submit" value="Submit">
+</form>
+<script>
+	function validateForm() {
+    var x = document.forms["myForm"]["fname"].value;
+	var yy = document.forms["myForm"]["rb"];
+	var y = undefined;
+	for(var i = 0;i<yy.length;i++){
+		if(yy[i].checked){
+			y = yy[i].value;
+		}
+	}
+    if (x == null || x == ""||y==undefined) {
+        alert("filled ur fucking form first, idiot!");
+        return false;
+    }
+}
+</script>

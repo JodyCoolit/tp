@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link type = "text/css" href = "css/main.css" rel = "stylesheet"/>
+</head>
+<body>
+	<ul id='ul'>
+		
+	</ul>
+	<table cellspacing = '50'id = 'bks'><tr id='bktr'></tr></table>
+	<script>
+		var ul = document.getElementById('ul');
+		var tb = document.getElementById('bktr');
+		var bkeys = [];
+		for(var i = 0 ; i<7; i++){
+			var li = document.createElement('li');
+			var td = document.createElement('button');
+			bkeys[i] = document.createElement('img');
+			bkeys[i].src = 'image/b.jpg';
+			var b = document.createElement('button');
+			if(i==0){
+				b.innerHTML = "<img src = image/w.jpg>";
+				b.value = "do";
+			}else if(i==1){
+				b.innerHTML = "<img src = image/w.jpg>";
+				b.value = "re";
+			}else if(i==2){
+				b.innerHTML = "<img src = image/w.jpg>";
+				b.value = "mi";
+			}else if(i==3){
+				b.innerHTML = "<img src = image/w.jpg>";
+				b.value = "fa";
+			}else if(i==4){
+				b.innerHTML = "<img src = image/w.jpg>";
+				b.value = "so";
+			}else if(i==5){
+				b.innerHTML = "<img src = image/w.jpg>";
+				b.value = "la";
+			}else if(i==6){
+				b.innerHTML = "<img src = image/w.jpg>";
+				b.value = "xi";
+			}
+			b.setAttribute('onclick','playSound(this.value)');
+			li.appendChild(b);
+			ul.appendChild(li);
+			tb.appendChild(td);
+			td.appendChild(bkeys[i]);
+		}
+		function playSound(key){
+			var audio = new Audio('sound/' + key + '.mp3');
+			audio.play();
+		}
+		
+		
+		document.onkeypress = displayunicode;
+		function displayunicode(e){
+			var unicode=e.keyCode? e.keyCode : e.charCode
+			var audio;
+			console.log(unicode);
+			switch(unicode){
+				case 97 : 
+					audio = new Audio('sound/do.mp3'); audio.play(); 
+					break;
+				case 115 :  audio = new Audio('sound/re.mp3'); audio.play(); 
+					break;
+				case 100 : audio = new Audio('sound/mi.mp3'); audio.play(); 
+					break;
+				case 102 :  audio = new Audio('sound/fa.mp3'); audio.play(); 
+					break;
+				case 103 :  audio = new Audio('sound/so.mp3'); audio.play(); 
+					break;
+				case 104 :  audio = new Audio('sound/la.mp3'); audio.play(); 
+					break;
+				case 106 :  audio = new Audio('sound/xi.mp3'); audio.play(); 
+					break;
+				default :
+					break;
+			}
+			
+		}
+		
+	</script>
+</body>
+</html>
