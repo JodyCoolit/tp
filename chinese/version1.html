@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset = 'utf8'/>
+		<title>Chinese Character</title>
+		<link rel="stylesheet" type="text/css" href="css/main.css">
+	</head>
+	<body>
+		<main>
+		<Canvas id = "canvas1" width = '500' height = '500'></Canvas>
+		<Canvas id = "canvas2" width = '500' height = '500'></Canvas>
+		<input type = 'text' name = 'newChar' id = 'newChar'/>
+		<button onclick = addNew();><h1>Add</h1></button>
+		<button onclick = clearC()><h1>Clear Left</h1></button>
+		<button onclick = clearCC()><h1>Clear Right</h1></button>
+		<div id = 'chars'>
+			<button value = '王' onclick =  drawSample(this) ><h1>王</h1></button>
+			<button value = '八' onclick =  drawSample(this) ><h1>八</h1></button>
+			<button value = '口' onclick =  drawSample(this) ><h1>口</h1></button>
+			<button value = '山' onclick =  drawSample(this) ><h1>山</h1></button>
+		</div>
+		<button id = 'compare' onclick = compareCanvas()><h1>Compare</h1></button>	
+		<div id = 'indicator'>
+			
+		</div>
+		</main>
+	</body>
+	<script>
+		var c = document.getElementById('canvas1');
+		var ctx = c.getContext('2d');
+		var cc = document.getElementById('canvas2');
+		var cctx = cc.getContext('2d');
+		var drawing = false;
+		var x,y,startX,startY,endX,endY,tX,tY;
+		var touchobj;
+		var one = false;
+		var two = false;
+		var three = false;
+		var g,g1,g2,g3;
+		var zhe = 1;
+		var img;
+		var k=0;
+		var correct = 0;
+		var curCan;
+		var undo = [];
+		var curButton = false;
+		var strokingArray = [];
+		var strokes = [];
+		var cstrokes = [];
+		var chars = {};
+		var range = [];
+		var reg = {
+			hengzhe : /0{5,}.*[Infinity]{5,}/,
+			shuzhe : /[Infinity]{3,}.*0{5,}/
+			//,piezhe,3,4,5
+		}
+		var strokesCode = { 
+			1 : '横' , //十
+			2 : '竖',//十
+			3 : '撇',//八
+			4 : '捺',//八
+			5 : '点',//广
+			6 : '提',//打
+			7 : '撇点',//巡
+			8 : '竖提',//农
+			9 : '横折提',//论
+			'a' : '竖钩',//小
+			'b' : '竖弯钩',//屯
+			'c' : '斜钩',//浅 心
+			'd' : '横钩',//写
+			'e' : '横折钩',//月
+			'f' : '横折弯钩',//九
+			'g' : '横撇弯钩',//那
+			'h' : '横折折折钩',//乃
+			'i' : '竖折折钩',//与
+			'j' : '竖弯',//四
+			'k' : '横折弯',//沿
+			'l' : '横折',//口
+			'm' : '竖折',//山
+			'n' : '撇折',//云
+			'o' : '横撇',//水
+			'p' : '横折折撇',//建
+			'q' : '竖折撇',//专
+			'z' : '未定义'
+		};
+		
+		c.addEventListener('touchstart',twrite_ms,false);
+		c.addEventListener('touchmove',twrite_mm,false);
+		c.addEventListener('touchend',twrite_me,false);
+		
+		cc.addEventListener('touchstart',twrite_ms,false);
+		cc.addEventListener('touchmove',twrite_mm,false);
+		cc.addEventListener('touchend',twrite_me,false);
+		
+		function clearC(){
+			c.getContext('2d').clearRect(0,0,c.width,c.height);
+			ctx = c.getContext('2d');
+			drawBackground(ctx);
+			strokes.length = 0;
+		}
+		
+		function clearCC(){
+			cctx.clearRect(0,0,cc.width,cc.height);
+			drawBackground(cctx);
+			cstrokes.length = 0;
+		}
+
+		function drawSample(button){
+			undo.length = 0;
+			k=0;
+			correct = 0;
+			ctx = c.getContext('2d');
+			ctx.font="400px kaiti";
+			ctx.fillStyle='red';
+			ctx.clearRect(0, 0, c.width, c.height);
+			drawBackground(ctx);
+			ctx.fillText(button.value,50,400);
+			cctx.font="400px kaiti";
+			cctx.fillStyle='red';
+			cctx.clearRect(0, 0, c.width, c.height);
+			drawBackground(cctx);
+			cctx.save();
+			cctx.lineWidth = 0.5;
+			cctx.strokeStyle = '000000';
+			cctx.strokeText(button.value,50,400);
+			cctx.restore();
+			curButton = button.value;
+			cstrokes = [];
+			var indicator = document.getElementById('indicator');
+			indicator.innerHTML = "";
+			for(var i = 0 ; i < chars[curButton].length ; i++){
+				indicator.innerHTML += ('<h2>Step '+(i+1)+'. ');
+				img = document.createElement('img');
+				img.id = 'img'+(i+1);
+				img.src = 'image/init.jpg';
+				img.widht='50';
+				img.height='50';
+				indicator.appendChild(img);
+				indicator.innerHTML += ('</h2><br/>');
+			}
+			curCan = cctx.getImageData(0,0,c.width,c.height);
+			undo.push(curCan);
+		}//ctx.fillText
+		function compareCanvas(){
+			if(chars[curButton]==cstrokes.join("")){
+				alert("match!");
+			}
+			else{
+				alert("not match!");
+			}
+		}
+		
+		function twrite_ms(e){
+			e.preventDefault();
+			ctx = this.getContext('2d');
+			drawing = true;
+			touchobj = e.targetTouches[0];	
+			startX = parseInt(touchobj.clientX) - this.getBoundingClientRect().left;
+			startY = parseInt(touchobj.clientY) - this.getBoundingClientRect().top;
+			ctx.beginPath();
+			ctx.moveTo(startX,startY);
+			tX = startX;
+			tY = startY;
+			zhe = 1;
+		}
+		function twrite_mm(e){
+			e.preventDefault();
+			if(drawing){
+				touchobj = e.targetTouches[0];	
+				x = parseInt(touchobj.clientX) - this.getBoundingClientRect().left;
+				y = parseInt(touchobj.clientY) - this.getBoundingClientRect().top;
+				ctx.lineTo(x,y);
+				ctx.stroke();
+				//console.log("("+x+","+y+")");	
+				g1 = (y - tY)/(x - tX);
+				strokingArray.push(g1);
+				tX = x;
+				tY = y;
+				if(g>-0.4&&g<0.4&&g1==Infinity){
+					if(zhe<2){
+						zhe++;
+					}
+					console.log("gradient : "+g1);
+					console.log("g : "+g);
+					console.log("zhe : "+zhe);
+				}else if(1/g>-0.4&&1/g<0.4&&g1==0){
+					if(zhe<2){
+						zhe++;
+					}
+					console.log("gradient : "+g1);
+					console.log("g : "+g);
+					console.log("zhe : "+zhe);
+				}
+				g = g1;
+			}
+		}
+		
+		function twrite_me(e){
+			e.preventDefault();
+			endX = x;
+			endY = y;
+			ctx.closePath();
+			drawing = false;
+			if(ctx==cctx){
+				cstrokes.push(getStrokeCode());
+			}else{
+				strokes.push(getStrokeCode());
+			}
+			curCan = ctx.getImageData(0,0,c.width,c.height);	
+			//console.log(getStrokeCode());
+			//console.log("You just draw a "+strokesCode[getStrokeCode()]);
+			//console.log(strokes);
+			//console.log(cstrokes);
+			console.log(strokingArray);
+			//console.log(strokingArray.join(''));
+			//strokingArray.push('\n');
+			/*
+			for(var h = 0; h<strokingArray.length;h++){
+				if((parseFloat(strokingArray[h])>0.3)&&(parseFloat(strokingArray[h])!=Infinity)){
+					range.push(strokingArray[h]);
+				}
+			}
+			console.log("range below");
+			console.log(range);
+			window.webkitRequestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+			*/
+			if(curButton){
+				if(chars[curButton].substring(k,k+1) == cstrokes[k]){
+					document.getElementById('img'+(k+1)).src = 'image/tick.jpg';
+					correct++;
+					k++;
+					undo.push(curCan);
+				}else{
+					document.getElementById('img'+(k+1)).src = 'image/cross.jpg';
+					ctx.putImageData(undo[undo.length - 1],0,0);
+					cstrokes.pop();
+				}
+				console.log("correct : "+correct);
+				if(correct == chars[curButton].length){
+					setTimeout(function(){alert("Congratulations!")},1000);
+					k = 0;
+					correct = 0;
+				}
+			}
+		}
+		
+		function addNew(){
+			var t = document.getElementById('newChar').value
+			var encodeString = strokes.join("");
+			if(strokes.length && t){
+				var b = document.createElement('button');
+				b.innerHTML = '<h1>'+t+"</h1>";
+				b.setAttribute('onclick','drawSample(this)');
+				b.value = t;
+				console.log(b);
+				document.getElementById('chars').appendChild(b);
+				chars[t]=encodeString;
+				console.log(chars[t]);
+				strokes.length = 0;
+			}
+			else{
+				alert('drawSomething!');
+			}
+		}
+		
+		function drawBackground(ctx){
+			ctx.save();
+			ctx.lineWidth = 2;
+			ctx.setLineDash([5]);
+			ctx.strokeStyle = "red";
+			ctx.globalAlpha = 0.2;
+			ctx.beginPath();
+			ctx.moveTo(0,0);
+			ctx.lineTo(c.width,c.height);
+			ctx.moveTo(0,c.height);
+			ctx.lineTo(c.width,0);
+			ctx.moveTo(0,c.height/2);
+			ctx.lineTo(c.width,c.height/2);
+			ctx.moveTo(c.width/2,0);
+			ctx.lineTo(c.width/2,c.height);
+			ctx.stroke();
+			ctx.closePath();
+			ctx.restore();
+		}
+		
+		ctx.lineWidth = 10;
+		ctx.lineCap="round";
+		cctx.lineWidth = 10;
+		cctx.lineCap="round";
+		drawBackground(ctx);
+		drawBackground(cctx);
+		chars['王']='1121';
+		chars['八']='34';
+		chars['口']='2l1';
+		chars['山']='2m2';
+		console.log(chars);
+		
+		function outRange(l,s){
+			for(var h = 0; h<strokingArray.length;h++){
+				var r = parseFloat(strokingArray[h]);
+				if((r>l)||(r<s)&&(r!=Infinity)){
+					range.push(strokingArray[h]);
+					return true;
+				}
+			}
+		}
+		
+		function inRange(l,s){
+			for(var h = 0; h<strokingArray.length;h++){
+				var r = parseFloat(strokingArray[h]);
+				if((r<l)&&(r>s)&&(r!=Infinity)){
+					range.push(strokingArray[h]);
+				}else{
+					return false;
+				}
+			}
+			return true;
+		}
+		
+		function onInitFs(fs) {
+		fs.root.getFile('hqhqhq.txt', {create: true}, function(fileEntry) {
+			// Create a FileWriter object for our FileEntry (log.txt).
+			fileEntry.createWriter(function(fileWriter) {
+
+				fileWriter.onwriteend = function(e) {
+				console.log('Write completed.');
+				};
+
+				fileWriter.onerror = function(e) {
+				console.log('Write failed: ' + e.toString());
+				};
+				// Create a new Blob and write it to log.txt.
+				var bb = new Blob(range); 
+
+				fileWriter.write(bb);
+				range.length = 0;
+
+			}, errorHandler);
+
+		}, errorHandler);
+
+		}
+		function errorHandler(){}
+		
+		function getStrokeCode(){
+			var shang = Math.abs(endX - startX)/Math.abs(endY - startY);
+			var diffX = endX - startX;
+			var diffY = endY - startY;
+			if(zhe == 1){
+				if(diffX > 0 && shang > 5 ){//横
+					return 1; 
+				}else if( diffY > 0 && shang < 0.2){//竖
+					return 2;
+				}else if( diffX < 0 && diffY > 0 && shang > 0.2 && shang < 1.6){//撇
+					return 3;
+				}else if( diffX > 0 && diffY > 0 && shang > 0.2 && shang < 1.6){//捺||点
+					if( diffX <70 && diffY < 70){//点
+						return 5;
+					}else
+						return 4;
+				}else if(endX > startX && endY < startY && shang > 0.2 && shang < 1.6){//提
+					return 6;
+				}
+			}else if(zhe == 2){
+				if(reg['hengzhe'].test(strokingArray.join(""))){
+					console.log('hi');
+					return 'l';
+				}else if(reg['shuzhe'].test(strokingArray.join(""))){
+					console.log('hello');
+					return 'm';
+				}
+				// 撇点 is missing else if(){}
+				// 竖提 is missing else if(){}
+				// 横折提 is missing else if(){}
+				// 弯钩 is missing else if(){}
+				// 竖钩 is missing else if(){}
+				// 斜钩 is missing else if(){}
+				// 横钩 is missing else if(){}
+				// 横折钩 is missing else if(){}
+				// 横折弯钩 is missing else if(){}
+				// 横撇弯钩 is missing else if(){}
+				// 横折折折钩 is missing else if(){}
+				// 竖折折钩 is missing else if(){}
+				// 竖弯 is missing else if(){}
+				// 横折弯 is missing else if(){}
+				// 撇折 is missing else if(){}
+				// 横撇 is missing else if(){}
+				// 横折折撇 is missing else if(){}
+				// 竖折撇 is missing else if(){}	
+			}
+			/*
+			else if(zhe == 3){
+				return 21;
+			}
+			else if(zhe == 4){
+				return 21;
+			}
+			else if(zhe == 5){
+				return 17;//横折折折钩
+			}
+			*/
+		}
+	</script>
+</html>

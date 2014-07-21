@@ -10,21 +10,87 @@
 		<Canvas id = "canvas1" width = '500' height = '500'></Canvas>
 		<Canvas id = "canvas2" width = '500' height = '500'></Canvas>
 		<input type = 'text' name = 'newChar' id = 'newChar'/>
-		<button onclick = addNew();><h1>Add</h1></button>
+		<button onclick = showText();><h1>ShowText</h1></button>
+		<!-- <button onclick = drawMode();><h1>drawMode</h1></button> -->
+		<!-- <button onclick = dotMode();><h1>dotMode</h1></button> -->
+		<button onclick = addStroke();><h1>Add Stroke</h1></button>
+		<button onclick = addNew();><h1>Done</h1></button>
 		<button onclick = clearC()><h1>Clear Left</h1></button>
 		<button onclick = clearCC()><h1>Clear Right</h1></button>
 		<div id = 'chars'>
-			<button value = '王' onclick =  drawSample(this) ><h1>王</h1></button>
-			<button value = '八' onclick =  drawSample(this) ><h1>八</h1></button>
-			<button value = '口' onclick =  drawSample(this) ><h1>口</h1></button>
-			<button value = '山' onclick =  drawSample(this) ><h1>山</h1></button>
 		</div>
-		<button id = 'compare' onclick = compareCanvas()><h1>Compare</h1></button>	
 		<div id = 'indicator'></div>
-		<Canvas id = "canvas3" width = '800' height = '380'></Canvas>
 		</main>
 	</body>
 	<script>
+		function addStroke(){
+			CHAR.push(charStrokes);
+			ctx.beginPath();
+			ctx.moveTo(charStrokes[0][0],charStrokes[0][1]);
+			for( var i = 0;i < charStrokes.length;i++){		
+				ctx.lineTo(charStrokes[i][0],charStrokes[i][1]);
+			}
+			ctx.stroke();
+			ctx.closePath();
+			charStrokes = [];
+			console.log(CHAR);
+		}
+		function drawMode(){
+			remove_all_events();
+			c.addEventListener('touchstart',twrite_ms,false);
+			c.addEventListener('touchmove',twrite_mm,false);
+			c.addEventListener('touchend',twrite_me,false);
+			c_events.push(['touchstart', twrite_ms]);
+			c_events.push(['touchmove', twrite_mm]);
+			c_events.push(['touchend', twrite_me]);
+			cc.addEventListener('touchstart',twrite_ms,false);
+			cc.addEventListener('touchmove',twrite_mm,false);
+			cc.addEventListener('touchend',twrite_me,false);
+			cc_events.push(['touchstart', twrite_ms]);
+			cc_events.push(['touchmove', twrite_mm]);
+			cc_events.push(['touchend', twrite_me]);
+		}
+		function dotMode(){
+			remove_all_events();
+			c.addEventListener('touchstart',dwrite_ms,false);
+			c.addEventListener('touchmove',dwrite_mm,false);
+			c.addEventListener('touchend',dwrite_me,false);
+			c_events.push(['touchstart', dwrite_ms]);
+			c_events.push(['touchmove', dwrite_mm]);
+			c_events.push(['touchend', dwrite_me]);
+			cc.addEventListener('touchstart',dwrite_ms,false);
+			cc.addEventListener('touchmove',dwrite_mm,false);
+			cc.addEventListener('touchend',dwrite_me,false);
+			cc_events.push(['touchstart', dwrite_ms]);
+			cc_events.push(['touchmove', dwrite_mm]);
+			cc_events.push(['touchend', dwrite_me]);
+		}
+		function dwrite_ms(e){
+			e.preventDefault();
+			ctx = this.getContext('2d');
+			drawing = true;
+			touchobj = e.targetTouches[0];	
+			startX = parseInt(touchobj.clientX) - this.getBoundingClientRect().left;
+			startY = parseInt(touchobj.clientY) - this.getBoundingClientRect().top;
+			ctx.beginPath();
+			ctx.moveTo(startX,startY);
+			ctx.lineTo(startX+0.001,startY);
+			ctx.stroke();
+			ctx.closePath();
+			charStrokes.push([startX,startY]);
+			console.log(charStrokes);
+		}
+		function dwrite_mm(e){
+			console.log('moving');
+		}
+		function dwrite_me(e){
+			console.log('end');
+		}
+		function showText(){
+			var text = document.getElementById('newChar');
+			drawSample(text);
+			dotMode();
+		}
 		var c = document.getElementById('canvas1');
 		var ctx = c.getContext('2d');
 		var cc = document.getElementById('canvas2');
@@ -36,61 +102,32 @@
 		var two = false;
 		var three = false;
 		var g,g1,g2,g3;
-		var zhe = 1;
 		var img;
-		var k=0;
+		var k = 0;
+		var curPoint;
+		var pointInPath;
 		var correct = 0;
 		var curCan;
 		var undo = [];
 		var curButton = false;
 		var strokingArray = [];
-		var strokes = [];
-		var cstrokes = [];
+		var points = [];
+		var charStrokes = [];
+		var CHAR = [];
 		var chars = {};
-		var range = [];
-		var reg = {
-			hengzhe : /0{5,}.*[Infinity]{5,}/,
-			shuzhe : /[Infinity]{3,}.*0{5,}/
-			//,piezhe,3,4,5
+		var c_events = new Array();
+		var cc_events = new Array();
+		var tempStrokingArray = [];
+		drawMode();
+		
+		function remove_all_events(){
+			for(var eventLength = 0; c_events[eventLength];eventLength++)
+			{
+				c.removeEventListener(c_events[eventLength][0],c_events[eventLength][1],false);
+				cc.removeEventListener(cc_events[eventLength][0],cc_events[eventLength][1],false);
+			}
 		}
-		var strokesCode = { 
-			1 : '横' , //十
-			2 : '竖',//十
-			3 : '撇',//八
-			4 : '捺',//八
-			5 : '点',//广
-			6 : '提',//打
-			7 : '撇点',//巡
-			8 : '竖提',//农
-			9 : '横折提',//论
-			'a' : '竖钩',//小
-			'b' : '竖弯钩',//屯
-			'c' : '斜钩',//浅 心
-			'd' : '横钩',//写
-			'e' : '横折钩',//月
-			'f' : '横折弯钩',//九
-			'g' : '横撇弯钩',//那
-			'h' : '横折折折钩',//乃
-			'i' : '竖折折钩',//与
-			'j' : '竖弯',//四
-			'k' : '横折弯',//沿
-			'l' : '横折',//口
-			'm' : '竖折',//山
-			'n' : '撇折',//云
-			'o' : '横撇',//水
-			'p' : '横折折撇',//建
-			'q' : '竖折撇',//专
-			'z' : '未定义'
-		};
-		
-		c.addEventListener('touchstart',twrite_ms,false);
-		c.addEventListener('touchmove',twrite_mm,false);
-		c.addEventListener('touchend',twrite_me,false);
-		
-		cc.addEventListener('touchstart',twrite_ms,false);
-		cc.addEventListener('touchmove',twrite_mm,false);
-		cc.addEventListener('touchend',twrite_me,false);
-		
+	
 		function clearC(){
 			c.getContext('2d').clearRect(0,0,c.width,c.height);
 			ctx = c.getContext('2d');
@@ -101,9 +138,25 @@
 		function clearCC(){
 			cctx.clearRect(0,0,cc.width,cc.height);
 			drawBackground(cctx);
-			cstrokes.length = 0;
 		}
-
+		
+		function initChar(button){
+			drawSample(button);
+			var indicator = document.getElementById('indicator');
+			indicator.innerHTML = "";
+			for(var i = 0 ; i < chars[curButton].length ; i++){
+				indicator.innerHTML += ('<h2>Step '+(i+1)+'. ');
+				img = document.createElement('img');
+				img.id = 'img'+(i+1);
+				img.src = 'image/init.jpg';
+				img.widht='50';
+				img.height='50';
+				indicator.appendChild(img);
+				indicator.innerHTML += ('</h2><br/>');
+			}
+			curCan = cctx.getImageData(0,0,c.width,c.height);
+			undo.push(curCan);
+		}
 		function drawSample(button){
 			undo.length = 0;
 			k=0;
@@ -124,30 +177,7 @@
 			cctx.strokeText(button.value,50,400);
 			cctx.restore();
 			curButton = button.value;
-			cstrokes = [];
-			var indicator = document.getElementById('indicator');
-			indicator.innerHTML = "";
-			for(var i = 0 ; i < chars[curButton].length ; i++){
-				indicator.innerHTML += ('<h2>Step '+(i+1)+'. ');
-				img = document.createElement('img');
-				img.id = 'img'+(i+1);
-				img.src = 'image/init.jpg';
-				img.widht='50';
-				img.height='50';
-				indicator.appendChild(img);
-				indicator.innerHTML += ('</h2><br/>');
-			}
-			curCan = cctx.getImageData(0,0,c.width,c.height);
-			undo.push(curCan);
 		}//ctx.fillText
-		function compareCanvas(){
-			if(chars[curButton]==cstrokes.join("")){
-				alert("match!");
-			}
-			else{
-				alert("not match!");
-			}
-		}
 		
 		function twrite_ms(e){
 			e.preventDefault();
@@ -160,7 +190,7 @@
 			ctx.moveTo(startX,startY);
 			tX = startX;
 			tY = startY;
-			zhe = 1;
+			
 		}
 		function twrite_mm(e){
 			e.preventDefault();
@@ -170,28 +200,15 @@
 				y = parseInt(touchobj.clientY) - this.getBoundingClientRect().top;
 				ctx.lineTo(x,y);
 				ctx.stroke();
-				//console.log("("+x+","+y+")");	
-				g1 = (y - tY)/(x - tX);
-				strokingArray.push(g1);
-				tX = x;
-				tY = y;
-				if(g>-0.4&&g<0.4&&g1==Infinity){
-					if(zhe<2){
-						zhe++;
-					}
-					console.log("gradient : "+g1);
-					console.log("g : "+g);
-					console.log("zhe : "+zhe);
-				}else if(1/g>-0.4&&1/g<0.4&&g1==0){
-					if(zhe<2){
-						zhe++;
-					}
-					console.log("gradient : "+g1);
-					console.log("g : "+g);
-					console.log("zhe : "+zhe);
-				}
-				g = g1;
+				console.log('('+x+','+y+')');
+				points.push([x,y]);
 			}
+		}
+		
+		function similarity(a,b,s){
+			if(a[0]+s >= b[0] && a[0]-s <= b[0] && a[1]+s >= b[1] && a[1]-s <= b[1]){
+				return true;
+			}else return false;
 		}
 		
 		function twrite_me(e){
@@ -200,31 +217,29 @@
 			endY = y;
 			ctx.closePath();
 			drawing = false;
-			if(ctx==cctx){
-				cstrokes.push(getStrokeCode());
-			}else{
-				strokes.push(getStrokeCode());
-			}
-			curCan = ctx.getImageData(0,0,c.width,c.height);	
-			//console.log(getStrokeCode());
-			//console.log("You just draw a "+strokesCode[getStrokeCode()]);
-			//console.log(strokes);
-			//console.log(cstrokes);
-			console.log(strokingArray);
-			//console.log(strokingArray.join(''));
-			//strokingArray.push('\n');
+			curPoint = false;
+			pointInPath = 0;
+			curCan = ctx.getImageData(0,0,c.width,c.height);
 			/*
-			for(var h = 0; h<strokingArray.length;h++){
-				if((parseFloat(strokingArray[h])>0.3)&&(parseFloat(strokingArray[h])!=Infinity)){
-					range.push(strokingArray[h]);
-				}
-			}
-			console.log("range below");
-			console.log(range);
 			window.webkitRequestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
 			*/
 			if(curButton){
-				if(chars[curButton].substring(k,k+1) == cstrokes[k]){
+				for(var m = 0; m<chars[curButton][k].length; m++){/* if(points[i] == chars[curButton][k][m]){pointInPath++;} */
+					for(var i = 0; i<points.length;i++){
+						if(similarity(points[i],chars[curButton][k][m],5)){
+							curPoint = true;
+							console.log('pointInPath : '+pointInPath);
+						}
+					}
+					if(curPoint){
+						pointInPath++;
+						curPoint = false;
+					}
+				}
+				
+				points = [];
+				
+				if(pointInPath == chars[curButton][k].length){// k = curStroke
 					document.getElementById('img'+(k+1)).src = 'image/tick.jpg';
 					correct++;
 					k++;
@@ -232,7 +247,6 @@
 				}else{
 					document.getElementById('img'+(k+1)).src = 'image/cross.jpg';
 					ctx.putImageData(undo[undo.length - 1],0,0);
-					cstrokes.pop();
 				}
 				console.log("correct : "+correct);
 				if(correct == chars[curButton].length){
@@ -245,17 +259,17 @@
 		
 		function addNew(){
 			var t = document.getElementById('newChar').value
-			var encodeString = strokes.join("");
-			if(strokes.length && t){
+			if(t){
 				var b = document.createElement('button');
 				b.innerHTML = '<h1>'+t+"</h1>";
-				b.setAttribute('onclick','drawSample(this)');
+				b.setAttribute('onclick','initChar(this)');
 				b.value = t;
 				console.log(b);
 				document.getElementById('chars').appendChild(b);
-				chars[t]=encodeString;
+				chars[t]=CHAR;
 				console.log(chars[t]);
-				strokes.length = 0;
+				CHAR = [];
+				drawMode();
 			}
 			else{
 				alert('drawSomething!');
@@ -288,33 +302,7 @@
 		cctx.lineCap="round";
 		drawBackground(ctx);
 		drawBackground(cctx);
-		chars['王']='1121';
-		chars['八']='34';
-		chars['口']='2l1';
-		chars['山']='2m2';
 		console.log(chars);
-		
-		function outRange(l,s){
-			for(var h = 0; h<strokingArray.length;h++){
-				var r = parseFloat(strokingArray[h]);
-				if((r>l)||(r<s)&&(r!=Infinity)){
-					range.push(strokingArray[h]);
-					return true;
-				}
-			}
-		}
-		
-		function inRange(l,s){
-			for(var h = 0; h<strokingArray.length;h++){
-				var r = parseFloat(strokingArray[h]);
-				if((r<l)&&(r>s)&&(r!=Infinity)){
-					range.push(strokingArray[h]);
-				}else{
-					return false;
-				}
-			}
-			return true;
-		}
 		
 		function onInitFs(fs) {
 		fs.root.getFile('hqhqhq.txt', {create: true}, function(fileEntry) {
@@ -341,63 +329,6 @@
 		}
 		function errorHandler(){}
 		
-		function getStrokeCode(){
-			var shang = Math.abs(endX - startX)/Math.abs(endY - startY);
-			var diffX = endX - startX;
-			var diffY = endY - startY;
-			if(zhe == 1){
-				if(diffX > 0 && shang > 5 ){//横
-					return 1; 
-				}else if( diffY > 0 && shang < 0.2){//竖
-					return 2;
-				}else if( diffX < 0 && diffY > 0 && shang > 0.2 && shang < 1.6){//撇
-					return 3;
-				}else if( diffX > 0 && diffY > 0 && shang > 0.2 && shang < 1.6){//捺||点
-					if( diffX <70 && diffY < 70){//点
-						return 5;
-					}else
-						return 4;
-				}else if(endX > startX && endY < startY && shang > 0.2 && shang < 1.6){//提
-					return 6;
-				}
-			}else if(zhe == 2){
-				if(reg['hengzhe'].test(strokingArray.join(""))){
-					console.log('hi');
-					return 'l';
-				}else if(reg['shuzhe'].test(strokingArray.join(""))){
-					console.log('hello');
-					return 'm';
-				}
-				// 撇点 is missing else if(){}
-				// 竖提 is missing else if(){}
-				// 横折提 is missing else if(){}
-				// 弯钩 is missing else if(){}
-				// 竖钩 is missing else if(){}
-				// 斜钩 is missing else if(){}
-				// 横钩 is missing else if(){}
-				// 横折钩 is missing else if(){}
-				// 横折弯钩 is missing else if(){}
-				// 横撇弯钩 is missing else if(){}
-				// 横折折折钩 is missing else if(){}
-				// 竖折折钩 is missing else if(){}
-				// 竖弯 is missing else if(){}
-				// 横折弯 is missing else if(){}
-				// 撇折 is missing else if(){}
-				// 横撇 is missing else if(){}
-				// 横折折撇 is missing else if(){}
-				// 竖折撇 is missing else if(){}	
-			}
-			/*
-			else if(zhe == 3){
-				return 21;
-			}
-			else if(zhe == 4){
-				return 21;
-			}
-			else if(zhe == 5){
-				return 17;//横折折折钩
-			}
-			*/
-		}
+		
 	</script>
 </html>

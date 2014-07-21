@@ -6,7 +6,7 @@ html,body,main{
 	height : 100%;
 	width : 100%;
 }
-#canvas1,#canvas2,#canvas3{
+#canvas1,#canvas2{
 	border-style : solid;
     border-width : 2px;
 	border-color : lightblue;
