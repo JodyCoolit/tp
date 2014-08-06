@@ -1,26 +1,31 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
+<!--
+	Developed by Huang Qian
+-->
 <html>
 	<head>
 		<meta charset = 'utf8'/>
 		<title>Chinese Character</title>
 		<link rel="stylesheet" type="text/css" href="css/main.css">
 	</head>
-	<body>
+	<body background ="image/aaa.jpg">
 		<main>
 		<Canvas id = "canvas1" width = '500' height = '500'></Canvas>
-		<Canvas id = "canvas2" width = '500' height = '500'></Canvas>
-		<input type = 'text' name = 'newChar' id = 'newChar'/>
-		<button onclick = showText();><h1>ShowText</h1></button>
+		<Canvas id = "canvas2" width = '500' height = '500'></Canvas>			
 		<!-- <button onclick = drawMode();><h1>drawMode</h1></button> -->
-		<!-- <button onclick = dotMode();><h1>dotMode</h1></button> -->
-		<button onclick = addStroke();><h1>Add Stroke</h1></button>
-		<button onclick = addNew();><h1>Done</h1></button>
-		<button onclick = clearC()><h1>Clear Left</h1></button>
-		<button onclick = clearCC()><h1>Clear Right</h1></button>
+		<!-- <button onclick = dotMode();><h1>dotMode</h1></button> -->		
+		<input type = 'text'class = 'newChar' name = 'newChar' id = 'newChar'/>	
+		<button onclick = "showText()" class="btn">ShowText</button>
+		<button onclick = "addStroke()" class="btn">Add Stroke</button>
+		<button onclick = "addNew()" class="btn">Done</button>
+		<button onclick = "clearC()" class="btn">Clear Left</button>
+		<button onclick = "clearCC()" class="btn">Clear Right</button>
 		<div id = 'chars'>
 		</div>
 		<div id = 'indicator'></div>
 		</main>
+		<!--style = 'display:none'-->
+		<div id = 'haha'></div>
 	</body>
 	<script>
 		function addStroke(){
@@ -109,12 +114,12 @@
 		var correct = 0;
 		var curCan;
 		var undo = [];
-		var curButton = false;
+		var curButton = 'lol';
 		var strokingArray = [];
 		var points = [];
 		var charStrokes = [];
 		var CHAR = [];
-		var chars = {};
+		var chars = [];
 		var c_events = new Array();
 		var cc_events = new Array();
 		var tempStrokingArray = [];
@@ -132,7 +137,6 @@
 			c.getContext('2d').clearRect(0,0,c.width,c.height);
 			ctx = c.getContext('2d');
 			drawBackground(ctx);
-			strokes.length = 0;
 		}
 		
 		function clearCC(){
@@ -141,10 +145,11 @@
 		}
 		
 		function initChar(button){
+			drawMode();
 			drawSample(button);
 			var indicator = document.getElementById('indicator');
 			indicator.innerHTML = "";
-			for(var i = 0 ; i < chars[curButton].length ; i++){
+			for(var i = 0 ; i < chars[curButton].strokes.length ; i++){
 				indicator.innerHTML += ('<h2>Step '+(i+1)+'. ');
 				img = document.createElement('img');
 				img.id = 'img'+(i+1);
@@ -176,8 +181,15 @@
 			cctx.strokeStyle = '000000';
 			cctx.strokeText(button.value,50,400);
 			cctx.restore();
-			curButton = button.value;
+			curButton = arrayObjectIndexOf(chars, button.value, "character");
 		}//ctx.fillText
+		
+		function arrayObjectIndexOf(myArray, searchTerm, property) {
+			for(var i = 0, len = myArray.length; i < len; i++) {
+			if (myArray[i][property] === searchTerm) return i;
+			}
+			return -1;
+		}
 		
 		function twrite_ms(e){
 			e.preventDefault();
@@ -200,7 +212,6 @@
 				y = parseInt(touchobj.clientY) - this.getBoundingClientRect().top;
 				ctx.lineTo(x,y);
 				ctx.stroke();
-				console.log('('+x+','+y+')');
 				points.push([x,y]);
 			}
 		}
@@ -223,23 +234,25 @@
 			/*
 			window.webkitRequestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
 			*/
-			if(curButton){
-				for(var m = 0; m<chars[curButton][k].length; m++){/* if(points[i] == chars[curButton][k][m]){pointInPath++;} */
-					for(var i = 0; i<points.length;i++){
-						if(similarity(points[i],chars[curButton][k][m],5)){
-							curPoint = true;
-							console.log('pointInPath : '+pointInPath);
+			if(curButton!= 'lol'){
+				for(var m = 0; m<chars[curButton].strokes.length; m++){//笔画数
+					for(var n = 0;n<chars[curButton].strokes[m].length;n++){
+						for(var i = 0; i<points.length;i++){//每一笔画的点数
+							if(similarity(points[i],chars[curButton].strokes[m][n],10)){
+								curPoint = true;
+							}
 						}
-					}
-					if(curPoint){
-						pointInPath++;
-						curPoint = false;
+						if(curPoint){
+							pointInPath++;
+							console.log('pointInPath : '+pointInPath);
+							curPoint = false;
+						}
 					}
 				}
 				
 				points = [];
 				
-				if(pointInPath == chars[curButton][k].length){// k = curStroke
+				if(pointInPath >= chars[curButton].strokes[k].length){// k = curStroke >=???? should be ==
 					document.getElementById('img'+(k+1)).src = 'image/tick.jpg';
 					correct++;
 					k++;
@@ -249,27 +262,38 @@
 					ctx.putImageData(undo[undo.length - 1],0,0);
 				}
 				console.log("correct : "+correct);
-				if(correct == chars[curButton].length){
+				if(correct == chars[curButton].strokes.length){
 					setTimeout(function(){alert("Congratulations!")},1000);
 					k = 0;
 					correct = 0;
 				}
 			}
 		}
-		
 		function addNew(){
-			var t = document.getElementById('newChar').value
+			var t = document.getElementById('newChar').value;
+			var hq = {
+				"character" : t,
+				"strokes" : CHAR
+			}
 			if(t){
-				var b = document.createElement('button');
-				b.innerHTML = '<h1>'+t+"</h1>";
-				b.setAttribute('onclick','initChar(this)');
-				b.value = t;
-				console.log(b);
-				document.getElementById('chars').appendChild(b);
-				chars[t]=CHAR;
-				console.log(chars[t]);
+				var xhr = new XMLHttpRequest();
+				xhr.open("POST", "http://192.168.1.157:8888/insert", true);//172.20.34.102  192.168.1.157
+				xhr.onreadystatechange = function(){
+				if (xhr.readyState == 4) {
+						drawMode();
+						chars.push(hq);
+						var b = document.createElement('button');
+						b.innerHTML = '<h1>'+t+"</h1>";
+						b.setAttribute('onclick','initChar(this)');
+						b.value = t;
+						console.log(b);
+						document.getElementById('chars').appendChild(b);
+					}
+				}
+				xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+				xhr.responseType  = 'JSON';
+				xhr.send(JSON.stringify(hq,null,5));
 				CHAR = [];
-				drawMode();
 			}
 			else{
 				alert('drawSomething!');
@@ -302,7 +326,6 @@
 		cctx.lineCap="round";
 		drawBackground(ctx);
 		drawBackground(cctx);
-		console.log(chars);
 		
 		function onInitFs(fs) {
 		fs.root.getFile('hqhqhq.txt', {create: true}, function(fileEntry) {
@@ -329,6 +352,36 @@
 		}
 		function errorHandler(){}
 		
-		
+		var xhr = new XMLHttpRequest();
+				xhr.open("POST", "http://192.168.1.157:8888/retrieve", true);//172.20.34.102  192.168.1.157
+				xhr.onreadystatechange = function(){
+				if (xhr.readyState == 4) {
+						drawMode();
+						if(xhr.responseText == ''){
+							console.log('receive nothing');
+						}else{
+							var a = xhr.responseText.split('\n')
+							for(var i = 0;i<a.length-1;i++){
+								console.log(JSON.parse(a[i]));
+								chars.push(JSON.parse(a[i]));
+								// create buttons
+								var b = document.createElement('button');
+								b.innerHTML = '<h1>'+chars[i].character+"</h1>";
+								b.setAttribute('onclick','initChar(this)');
+								b.value = chars[i].character;
+								b.style.backgroundColor = "#f9f9f9";
+								b.style.borderRadius = "6px";
+								b.style.border = "1px solid #dcdcdc";
+								b.style.color = "#666666";
+								b.style.textShadow = "0 1px 0 #ffffff";																
+								console.log(b);
+								document.getElementById('chars').appendChild(b);
+							}
+						}
+					}
+				}
+				xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+				xhr.responseType  = 'JSON';
+				xhr.send('hq');
 	</script>
 </html>

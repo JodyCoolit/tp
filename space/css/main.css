@@ -1,0 +1,17 @@
+*{
+	margin:0px;
+	padding:0px;
+}
+
+#c{
+	background-image : url('../image/space3.jpg');
+}
+button{
+	position : absolute;
+	background : transparent;
+	width : 400px;
+	height : 70px;
+	color : lightgreen;
+	font-size : 60px;
+	border : none;
+}

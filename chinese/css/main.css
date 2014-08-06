@@ -6,7 +6,18 @@ html,body,main{
 	height : 100%;
 	width : 100%;
 }
-#canvas1,#canvas2{
+#canvas1{
+	position: absolute;
+	top: 82.5px;
+	left: 0px;
+	border-style : solid;
+    border-width : 2px;
+	border-color : lightblue;
+}
+#canvas2{
+	position: absolute;
+	top: 82.5px;
+	left: 502.5px;
 	border-style : solid;
     border-width : 2px;
 	border-color : lightblue;
@@ -16,7 +27,7 @@ canvas{
 }
 @font-face{
 	font-family: 'kaiti';
-    src: url('font/kaiti.ttf');
+    src: url('../font/kaiti.ttf');
 }
 h2{
 	font-size : 50px;
@@ -24,4 +35,49 @@ h2{
 }
 h1{
 	font-size : 30px;
+}
+#indicator{
+	position:absolute;
+	top :82.5px;
+	left : 1010px;
+}
+.btn{
+	margin:0;
+	padding:6px 25px;
+	background-color:#000033;
+	border:1px solid;
+	border-color:#003366;
+	border-bottom-width:6px;
+	font-family:arial, tahoma;
+	font-size:20px;
+	font-weight:bold;
+	cursor:pointer;
+	color:#fff;
+	text-shadow:0 1px 0 #000;
+	-webkit-border-radius:6px;
+	border-radius:6px;
+	-webkit-box-shadow:0px 0px 5px #bbb;
+	box-shadow:0px 0px 5px #bbb;
+	-ms-transition:0.3s ease all;
+	-o-transition:0.3s ease all;
+	transition:0.3s ease all;
+}
+.btn:hover {
+	background-color:#006699;
+	position:relative;
+	top:-1px;
+}
+.btn:active {
+	background-color:#0099FF;
+	position:relative;
+	top:1px;
+	border-bottom-width:1px;
+}
+.newChar {
+	background: #fff url(http://html-generator.weebly.com/files/theme/input-text-9.png) no-repeat 4px 4px;
+	border: 1px solid #999; 
+    outline:0; 
+    padding-left: 25px;
+    height:25px; 
+    width: 250px; 
 }

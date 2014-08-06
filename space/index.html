@@ -1,0 +1,283 @@
+<!doctype html>
+<!-- 
+	by Huang Qian
+-->
+<html>
+<head>
+<title>Space War</title>
+<link href = 'css/main.css' type = 'text/css' rel = 'stylesheet'/>
+<script src = 'js/game.js'></script>
+</head>
+<body>
+	<main>
+		<canvas id = 'c' height = '1074' width = '1920'></canvas>
+		<button id = 'b0' onclick = 'single()'>Single Player</button>
+		<button id = 'b1' onclick = 'multiple()'>Multiple Player</button>
+		<button id = 'b2' onclick = 'setting()'>Setting</button>
+		<button id = 'b3' onclick = 'end()'>End Game</button>
+	</main>
+<script>
+	var c = document.getElementById('c');
+	var ctx = c.getContext('2d');
+	var button = [];
+	var menuIndex = 0;
+	var menuOffsetTop = 400;
+	ctx.font = 'italic 60px Calibri';
+	ctx.fillStyle = 'lightgreen';
+	ctx.save();
+	ctx.font = 'italic 150px Calibri';
+	ctx.fillStyle = 'darkred';
+	ctx.fillText('Space War',700,200);
+	ctx.restore();
+	ctx.save();
+	ctx.font = 'italic 20px Calibri';
+	ctx.fillStyle = 'lightblue';
+	ctx.fillText('\u00A9Copyright 2014-Forever by HQ. All Rights Reserved.',800,1050);
+	ctx.restore();
+	var textLength = ctx.measureText('Single Player');
+	/* ctx.fillText('Single Player',(c.width - textLength.width)/2,menuOffsetTop + menuIndex*100);
+	menuIndex++;
+	textLength = ctx.measureText('Multiple Players');
+	ctx.fillText('Multiple Players',(c.width - textLength.width)/2,menuOffsetTop + menuIndex*100);
+	menuIndex++;
+	textLength = ctx.measureText('Setting');
+	ctx.fillText('Setting',(c.width - textLength.width)/2,menuOffsetTop + menuIndex*100);
+	menuIndex++;
+	textLength = ctx.measureText('End Game');
+	ctx.fillText('End Game',(c.width - textLength.width)/2,menuOffsetTop + menuIndex*100); */
+	//console.log('offset left Start Game : '+(c.width - textLength.width)/2);
+	for(var i = 0 ; i < 4 ;i++){
+		button[i] = document.getElementById('b'+i);
+		button[i].style.left = (c.width - textLength.width)/2+'px';
+		button[i].style.top = menuOffsetTop + i*100 + 'px';
+	}
+	
+	var players = [];
+	var n = 0;
+	var missiles = [];
+	var health = 100;
+	var barS = 1.4;
+	var preX,preY,curX,curY;
+function missile(x,y,xSpeed,ySpeed,radius,color){
+	this.x = x;
+	this.y = y;
+	this.xSpeed = xSpeed;
+	this.ySpeed = ySpeed;
+	this.radius = radius;
+	this.color = color;
+}
+function single(){
+	for(var i = 0 ;i<missiles.length;i++){
+			delete missiles[i];
+	}
+	missiles.length = 0;
+	health = 100;
+	setInterval(init,100);
+}
+
+function missileEmitter(){
+	var x,y,xSpeed,ySpeed,width,height,color;
+	x = getRandomInt(850,1050);
+	y = getRandomInt(100,300);
+	xSpeed = getRandomInt(-10,10);
+	ySpeed = getRandomInt(-10,10);
+	if(xSpeed == 0 && ySpeed == 0){
+		xSpeed = getRandomInt(-10,10);
+		ySpeed = getRandomInt(-10,10);
+	}
+	radius = getRandomInt(10,20);
+	color = 'rgb('+getRandomInt(0,255)+','+getRandomInt(0,255)+','+getRandomInt(0,255)+')';
+	missiles.push(new missile(x,y,xSpeed,ySpeed,radius,color));
+}
+
+function multiple(){
+	var xmlHttp;
+    xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( 'GET', 'http://127.0.0.1:8080/space/a.txt', false );
+    xmlHttp.send();
+    return console.log(xmlHttp.responseText);
+}
+
+function setting(){
+
+}
+
+function end(){
+	
+}
+
+function init(players){
+	ctx.clearRect(0,0,c.width,c.height);
+	for(var i = 0;i<4;i++){
+		button[i].style.display = 'none';
+	}
+	drawBackground();
+	drawEmitter();
+	drawPlayer();
+	drawMissile(missiles);
+	missileEmitter();
+	drawBar();
+}
+
+function drawBackground(){
+	c.style.backgroundImage = 'url(image/space4.jpg)';
+}
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function distance(x1,y1,x2,y2){
+	return Math.sqrt(Math.pow((y2-y1),2) + Math.pow((x2-x1),2));
+}
+
+function drawPlayer(){
+	ctx.beginPath();
+	ctx.arc(950,1100,300,0,Math.PI,true);
+	ctx.closePath();
+	ctx.fill();
+	ctx.save();
+	ctx.beginPath();
+	ctx.fillStyle = 'blue';
+	ctx.fillText(health,900,1000);
+	ctx.closePath();
+	ctx.fill();
+	ctx.restore();
+}
+
+function drawEmitter(){
+	var x,y;
+	var sunColors = ['rgb(255,0,0)','rgb(255,128,0)','rgb(255,255,0)','rgb(0,255,0)','rgb(0,255,255)','rgb(0,0,255 )','rgb(128,0,255)'];
+	ctx.save();
+	ctx.shadowColor = '#00fe00';
+	ctx.shadowBlur = 100;
+	ctx.shadowOffsetX = 10;
+	ctx.shadowOffsetY = 10;
+	x = 950;
+	y = 200;
+	var gradient = ctx.createRadialGradient(x, y, 1, x, y, 400);
+	gradient.addColorStop(0, sunColors[0]);
+	gradient.addColorStop(0.16, sunColors[1]);
+	gradient.addColorStop(0.32, sunColors[2]);
+	gradient.addColorStop(0.48, sunColors[3]);
+	gradient.addColorStop(0.64, sunColors[4]);
+	gradient.addColorStop(0.80, sunColors[5]);
+	gradient.addColorStop(1, sunColors[6]); 
+	/* for(var i = 0, m = 0;i < 7;i++,m++){
+		gradient.addColorStop(m/6, sunColors[getRandomInt(0,6)]);
+	}  */
+	ctx.fillStyle = gradient;
+	ctx.globalAlpha = 0.5;
+	ctx.beginPath();
+	ctx.arc(x,y,100,0,2*Math.PI);
+	ctx.closePath();
+	ctx.fill();
+	ctx.restore();
+}
+
+function drawMissile(missiles){
+	/* var img = new Image();
+	img.src = 'image/missile.png';
+	ctx.drawImage(img,800,100,50,50); */
+	ctx.save();
+	var k = missiles.length;
+	for(var i = 0;i<k;i++){
+		ctx.beginPath();
+		if(missiles[i]){
+			ctx.arc(missiles[i].x,missiles[i].y,missiles[i].radius,0,2*Math.PI);
+			ctx.closePath();
+			ctx.fillStyle = missiles[i].color;
+			ctx.globalAlpha = 0.8;
+			ctx.fill();
+			if(missiles[i].x<10){
+				leftWallCollistion(missiles[i]);
+			}else if(missiles[i].y<10){
+				topWallCollistion(missiles[i]);
+			}else if(missiles[i].x>c.width-20){
+				rightWallCollistion(missiles[i]);
+			}else if(missiles[i].y>c.height-20){
+				btmWallCollistion(missiles[i]);
+			}else if((distance(950,1100,missiles[i].x,missiles[i].y)<=340)&&missiles[i].x>=(650+(barS-1)*600)&&missiles[i].x<=(650+(barS-1+0.2)*600)){
+				barCollision(missiles[i]);
+			}else if(distance(950,1100,missiles[i].x,missiles[i].y)<=300){
+				playerCollision(missiles[i]);
+			}
+			missiles[i].x +=missiles[i].xSpeed;
+			missiles[i].y +=missiles[i].ySpeed;
+		}
+	}
+	ctx.restore();
+}
+
+function drawBar(){
+	ctx.save();
+	ctx.strokeStyle = 'white';
+	ctx.beginPath();
+	ctx.lineWidth = 15;
+	ctx.arc(950,1100,320,barS*Math.PI,(barS+0.2)*Math.PI);//1<bar<1.8
+	ctx.stroke();
+	ctx.restore();
+}
+
+window.onmousedown = function(e){
+	console.log(e.offsetX+','+e.offsetY);
+}
+
+window.onmousemove = function(e){
+	if(!preX){
+		preX = e.clientX;
+		preY = e.clientX;
+	}
+	curX = e.clientX;
+	curY = e.clientY;
+	if(barS>=1&&barS<=1.8&&curX>preX){
+		barS+=0.012;
+	}
+	else if(barS>=1&&barS<=1.8&&curX<preX){
+		barS-=0.012;
+	}else if(barS<1){
+		barS+=0.012;
+	}else if(barS>1.8){
+		barS-=0.012;
+	}
+	console.log(barS);
+	preX = curX;
+	preY =curY;
+}
+
+function barCollision(missile){
+	missile.xSpeed *= -1;
+	missile.ySpeed *= -1;
+}
+
+function playerCollision(missile){
+	var index = missiles.indexOf(missile);
+	if(index > -1){
+		missiles.splice(index,1);
+	}
+	missile.xSpeed *= -1;
+	missile.ySpeed *= -1;
+	health--;
+	if(health <=0){
+		console.log('game over!');
+		single();
+	}
+}
+function topWallCollistion(missile){
+	missile.ySpeed *= -1;
+}
+
+function btmWallCollistion(missile){
+	missile.ySpeed *= -1;
+}
+
+function leftWallCollistion(missile){
+	missile.xSpeed *= -1;
+}
+
+function rightWallCollistion(missile){
+	missile.xSpeed *= -1;
+}
+</script>
+</body>
+</html>
