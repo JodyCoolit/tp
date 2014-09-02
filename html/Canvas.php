@@ -47,7 +47,7 @@
 	<script src="js/colorpicker.js"></script>
 </head>
 <body>
-<nav>
+<div id="tabs">
 	<table>
 		<tr>
 			<td><button onclick="showFile()" class="btn"/>File</button></td>
@@ -56,19 +56,31 @@
 			<td><button onclick="showPicture()"class="btn"/>Picture</button></td>
 		</tr>
 </table>
-</nav>
+</div>
+<button id='escbtn' onclick = 'escppt()'>Back</button>
+<iframe id='iframe'src="http://docs.google.com/gview?url=http://www.nmmapp.com/1B14037/html/ppt/a.ppt&embedded=true" frameborder="0"></iframe>
 <canvas id="mc2" width="260" height="128" style="solid #000000;"></canvas><br/>
-<progress id="p_bar"value="50" max="100" style="width:260px;height:20px;" onclick="changePaintSize()"></progress>
+<progress id="p_bar"value="50" max="100" style="width:260px;height:20px;" onclick="changePaintSize()">
+	<div pseudo="-webkit-progress-bar">
+		<div pseudo="-webkit-progress-value"></div>
+	</div>
+</progress>
 <div id="optionButton">
 <table id="fileButton">
 		<tr>
-			<td rowspan="2"><button><a href="login.html"><img src="image/admin.jpg"/></a></button></td>
-			<td><button onclick="newCanvas()"><img src="image/new.jpg"/></button></td>
-			<td><div class="inputWrapper"><input id="uploadimage" class="fileInput" type="file" name="impfile" onchange="importt()"/></div></td>
+			<td><button onclick ="playPpt()"><img src="image/ppt.jpg"/></button></td>
+			<td><button onclick ="changeUp()"><img src="image/up.jpg"/></button></td>
+			<td><button onclick="record()"><img src="image/record.jpg"/></button></td>
+			<td><button><a href="login.html"><img src="image/admin.jpg"/></a></button></td>
+			<td><button onclick="changeName()"><img src="image/rename.jpg"/></button></td>
+			<td><button onclick="newCanvas()"><img src="image/new.jpg"/></button></td>			
 		</tr>
 		<tr>
-			<td><a id="dlLink" download><button onclick="exportt()"><img src="image/export.jpg"/></button></a></td>
-			<td><button onclick="print()"><img src="image/print.jpg"/></button></td>
+			<td><button onclick ="changeDown()"><img src="image/down.jpg"/></button></td>
+			<td><button onclick="recordPlay()"><img src="image/replay.jpg"/></button></td>
+			<td><div class="inputWrapper"><input id="uploadimage" class="fileInput" type="file" name="impfile" onchange="importt()"/></div></td>
+			<td><a id="dlLink" download><button onclick="exportt()"><img src="image/export.jpg"/></button></a></td>	
+			<td><button onclick="print()"><img src="image/print.jpg"/></button></td>			
 		</tr>
 </table>
 </div>
@@ -96,6 +108,35 @@
 		</tr>
 	</table>
 </div>
+<div id="sizesButton">
+	<table>
+		<tr>
+			<td><button onclick="smallSize()"><img src="image/small.jpg"/></button></td>
+			<td><button onclick="mediumSize()"><img src="image/medium.jpg"/></button></td>
+			<td><button onclick="largeSize()"><img src="image/large.jpg"/></button></td>
+		</tr>
+	</table>
+</div>
+<div id="colorsButton">
+	<table>
+		<tr>
+			<td><button onclick="blackColor()"><img src="image/black.jpg"/></button></td>
+			<td><button onclick="greyColor()"><img src="image/grey.jpg"/></button></td>
+			<td><button onclick="redColor()"><img src="image/red.jpg"/></button></td>
+			<td><button onclick="orangeColor()"><img src="image/orange.jpg"/></button></td>
+			<td><button onclick="beigeColor()"><img src="image/beige.jpg"/></button></td>
+			<td><button onclick="pinkColor()"><img src="image/pink.jpg"/></button></td>
+		</tr>
+		<tr>
+			<td><button onclick="yellowColor()"><img src="image/yellow.jpg"/></button></td>
+			<td><button onclick="greenColor()"><img src="image/green.jpg"/></button></td>
+			<td><button onclick="tealColor()"><img src="image/teal.jpg"/></button></td>
+			<td><button onclick="blueColor()"><img src="image/blue.jpg"/></button></td>
+			<td><button onclick="purpleColor()"><img src="image/purple.jpg"/></button></td>
+			<td><button onclick="brownColor()"><img src="image/brown.jpg"/></button></td>
+		</tr>
+	</table>
+</div>
 <canvas id="myCanvas" width="1145" height="640"style="background-color:white"></canvas>
 <div id="bgs"><!-- backgrounds -->
 <table cellspacing="5px">
@@ -108,6 +149,11 @@
 <div id="can_tabs">
 </div>
 <script>
+	var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+	var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+	var ppt = document.getElementById('iframe');
+	ppt.style.width = w+'px';
+	ppt.style.height = h+'px';
 	var c = document.getElementById("myCanvas");
 	var ctx=c.getContext('2d');
 	//var currentCanvas = c;
@@ -125,6 +171,7 @@
 	//undo&redo
 	var undoArray = [];
 	var redoArray = [];
+	var animateArray = [];
 	var currentFrame;
 	var frameCount = 0;
 	var canvasData = new Image();
@@ -157,6 +204,25 @@
 	canButton.setAttribute("onclick",'tabCanvas(this)');
 	document.getElementById('can_tabs').appendChild(canButton);
 	
+	function escppt(){
+		$("#optionButton").show();
+		$('#myCanvas').show();
+		$('#can_tabs').show();
+		$('#tabs').show();
+		$('#iframe').hide();
+		$('#escbtn').hide();
+		document.getElementById('escbtn').style.z-index = 0;
+	}
+	function playPpt(){
+		$("#optionButton").hide();
+		$('#myCanvas').hide();
+		$('#can_tabs').hide();
+		$('#tabs').hide();
+		$('#iframe').show();
+		$('#escbtn').show();
+		document.getElementById('escbtn').style.z-index = 1;
+	}
+	
 	//textCursor
 	var blinkingInterval = false;
 	TextCursor = function (fillStyle, width) {
@@ -164,7 +230,7 @@
 	this.width = width || 1;
 	this.left = 0;
 	this.top = 0;
-};
+	};
 
 TextCursor.prototype = {
    getHeight: function (context) {
@@ -428,6 +494,14 @@ document.onkeypress = function (e) {
 		console.log(canID);
 	}
 	
+	function changeName() {
+		var newName = prompt("Please Enter Preferred Name", "Enter New Name For Canvas");
+		
+		if (newName!=null){
+			document.getElementById("can_tabs").appendChild(canButton).innerHTML= newName;
+		}
+	}
+	
 	function removePic(){
 		console.log("before remove"+canElements.length);
 		document.body.removeChild(selectedImage);
@@ -626,7 +700,7 @@ document.onkeypress = function (e) {
 		}
 		console.log('drawing rec');
 		*/
-		}
+			}
 		}
 		function drawOval_te(e){
 		e.preventDefault();
@@ -642,7 +716,7 @@ document.onkeypress = function (e) {
 		ctx.stroke();
 		touchstart = false;
 		pushFrame();
-		}
+			}
 		}
 	}
 	function selectCanvas(){
@@ -740,6 +814,8 @@ document.onkeypress = function (e) {
 		$("#mc2").hide();
 		$("#addBackground").hide();
 		$("#addPicture").hide();
+		$("#sizesButton").hide();
+		$("#colorsButton").hide();
 	}
 	
 	function showDraw(){
@@ -751,6 +827,8 @@ document.onkeypress = function (e) {
 		$("#mc2").show();
 		$("#addBackground").hide();
 		$("#addPicture").hide();
+		$("#sizesButton").show();
+		$("#colorsButton").show();
 	}
 	
 	function showBackground(){
@@ -762,6 +840,8 @@ document.onkeypress = function (e) {
 		$("#mc2").hide();
 		$("#addBackground").show();
 		$("#addPicture").hide();
+		$("#sizesButton").hide();
+		$("#colorsButton").hide();
 	}
 	
 	function showPicture(){
@@ -773,6 +853,8 @@ document.onkeypress = function (e) {
 		$("#mc2").hide();
 		$("#addBackground").hide();
 		$("#addPicture").show();
+		$("#sizesButton").hide();
+		$("#colorsButton").hide();
 	}
 	
 	function unDo(){
@@ -788,7 +870,7 @@ document.onkeypress = function (e) {
 		}else{
 			clearCanvas();
 		}
-		console.log("undo : "+canvasData.src);
+		console.log("undo: "+canvasData.src);
 	}
 	
 	function reDo(){
@@ -1042,7 +1124,12 @@ document.onkeypress = function (e) {
 		}
 		
 		function drawLine_tm(e){
-		e.preventDefault();
+			e.preventDefault();
+			if(recordMode){
+				var aniFrame = c.toDataURL();
+				animateArray.push(aniFrame);
+				console.log(aniFrame);
+			}
 			if(e.targetTouches.length==1){
 				touchobj = e.targetTouches[0];
 				x1 = parseInt(touchobj.clientX) - this.getBoundingClientRect().left; // get x position of touch point relative to left edge of browser
@@ -1654,7 +1741,166 @@ document.onkeypress = function (e) {
 			console.log('end');
 		}
 	}
-
+	function smallSize(){
+		paintSize = 0.05;
+	}
+	function mediumSize(){
+		paintSize = 1.05;
+	}
+	function largeSize(){
+		paintSize = 2.10;
+	}	
+	function blackColor(){
+		paintColor = "black";
+	}
+	function greyColor(){
+		paintColor = "grey";
+	}
+	function redColor(){
+		paintColor = "red";
+	}
+	function orangeColor(){
+		paintColor = "orange";
+	}
+	function beigeColor(){
+		paintColor = "FFCC99";
+	}
+	function pinkColor(){
+		paintColor = "FF33CC";
+	}
+	function yellowColor(){
+		paintColor = "yellow";
+	}
+	function greenColor(){
+		paintColor = "33FF00";
+	}
+	function tealColor(){
+		paintColor = "00CCCC";
+	}
+	function blueColor(){
+		paintColor = "blue";
+	}
+	function purpleColor(){
+		paintColor = "purple";
+	}
+	function brownColor(){
+		paintColor = "993333";
+	}
+	
+	var ani_index = 1;
+	var ani_id;
+	var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+	
+	function animate(){
+		canvasData.src = animateArray[ani_index];
+		console.log('cd : '+canvasData);
+		console.log('index : '+ani_index);
+		ctx.drawImage(canvasData,0,0);
+		if(ani_index < animateArray.length-1){
+			ani_index++;
+		}
+		else{
+			clearInterval(ani_id);
+		}
+		//requestAnimationFrame(animate);
+	}
+	function recordPlay(){
+	clearCanvas();
+	ani_id = setInterval(animate,100);
+	}
+	var recordMode = false;
+	function record(){
+		recordMode = true;
+	}
+	function stop(){
+		recordMode = false;
+	}
+	function changeUp(){
+		showDraw();
+		var Obj = document.getElementById("myCanvas");
+		var Obj1 = document.getElementById("tabs");
+		var Obj2 = document.getElementById("mc2");
+		var Obj3 = document.getElementById("p_bar");
+		var Obj4 = document.getElementById("colorsButton");
+		var Obj5 = document.getElementById("sizesButton");
+		var Obj6 = document.getElementById("toolsButton");
+		var Obj7 = document.getElementById("optionButton");
+		var Obj8 = document.getElementById("bgs");
+		var Obj9 = document.getElementById("pictures");
+		var Obj10 = document.getElementById("can_tabs");
+	
+		Obj.style.top = "230px";
+		
+		Obj1.style.top = "0px";
+		
+		Obj2.style.top = "50px";
+		
+		Obj3.style.top = "180px";
+		
+		Obj4.style.top = "50px";
+		Obj4.style.left = "275px";
+		
+		Obj5.style.top = "140px";
+		Obj5.style.left = "315px";
+		
+		Obj6.style.top = "50px";
+		Obj6.style.left = "540px";
+		
+		Obj7.style.top = "50px";
+		Obj7.style.left = "500px";
+		
+		Obj8.style.top = "50px";
+		Obj8.style.left = "0px";
+		
+		Obj9.style.top = "50px";
+		Obj9.style.left = "0px";
+		
+		Obj10.style.top = "0px";
+		Obj10.style.left = "500px";
+	}
+	function changeDown(){
+		showDraw();
+		var Obj = document.getElementById("myCanvas");
+		var Obj1 = document.getElementById("tabs");
+		var Obj2 = document.getElementById("mc2");
+		var Obj3 = document.getElementById("p_bar");
+		var Obj4 = document.getElementById("colorsButton");
+		var Obj5 = document.getElementById("sizesButton");
+		var Obj6 = document.getElementById("toolsButton");
+		var Obj7 = document.getElementById("optionButton");
+		var Obj8 = document.getElementById("bgs");
+		var Obj9 = document.getElementById("pictures");
+		var Obj10 = document.getElementById("can_tabs");
+		
+		Obj.style.top = "0px";
+		
+		Obj1.style.top = "640px";
+		
+		Obj2.style.top = "690px";
+		
+		Obj3.style.top = "825px";
+		
+		Obj4.style.top = "690px";
+		Obj4.style.left = "275px";
+		
+		Obj5.style.top = "780px";
+		Obj5.style.left = "315px";
+		
+		Obj6.style.top = "690px";
+		Obj6.style.left = "540px";
+		
+		Obj7.style.top = "690px";
+		Obj7.style.left = "500px";
+		
+		Obj8.style.top = "690px";
+		Obj8.style.left = "0px";
+		
+		Obj9.style.top = "690px";
+		Obj9.style.left = "0px";
+		
+		Obj10.style.top = "640px";
+		Obj10.style.left = "500px";
+	}
 </script>
 </body>
 </html>

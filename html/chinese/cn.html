@@ -1,0 +1,387 @@
+﻿<!DOCTYPE html>
+<!--
+	Developed by Huang Qian
+-->
+<html>
+	<head>
+		<meta charset = 'utf8'/>
+		<title>Chinese Character</title>
+		<link rel="stylesheet" type="text/css" href="css/main.css">
+	</head>
+	<body background ="image/aaa.jpg">
+		<main>
+		<Canvas id = "canvas1" width = '500' height = '500'></Canvas>
+		<Canvas id = "canvas2" width = '500' height = '500'></Canvas>			
+		<!-- <button onclick = drawMode();><h1>drawMode</h1></button> -->
+		<!-- <button onclick = dotMode();><h1>dotMode</h1></button> -->		
+		<input type = 'text'class = 'newChar' name = 'newChar' id = 'newChar'/>	
+		<button onclick = "showText()" class="btn">ShowText</button>
+		<button onclick = "addStroke()" class="btn">Add Stroke</button>
+		<button onclick = "addNew()" class="btn">Done</button>
+		<button onclick = "clearC()" class="btn">Clear Left</button>
+		<button onclick = "clearCC()" class="btn">Clear Right</button>
+		<div id = 'chars'>
+		</div>
+		<div id = 'indicator'></div>
+		</main>
+		<!--style = 'display:none'-->
+		<div id = 'haha'></div>
+	</body>
+	<script>
+		function addStroke(){
+			CHAR.push(charStrokes);
+			ctx.beginPath();
+			ctx.moveTo(charStrokes[0][0],charStrokes[0][1]);
+			for( var i = 0;i < charStrokes.length;i++){		
+				ctx.lineTo(charStrokes[i][0],charStrokes[i][1]);
+			}
+			ctx.stroke();
+			ctx.closePath();
+			charStrokes = [];
+			console.log(CHAR);
+		}
+		function drawMode(){
+			remove_all_events();
+			c.addEventListener('touchstart',twrite_ms,false);
+			c.addEventListener('touchmove',twrite_mm,false);
+			c.addEventListener('touchend',twrite_me,false);
+			c_events.push(['touchstart', twrite_ms]);
+			c_events.push(['touchmove', twrite_mm]);
+			c_events.push(['touchend', twrite_me]);
+			cc.addEventListener('touchstart',twrite_ms,false);
+			cc.addEventListener('touchmove',twrite_mm,false);
+			cc.addEventListener('touchend',twrite_me,false);
+			cc_events.push(['touchstart', twrite_ms]);
+			cc_events.push(['touchmove', twrite_mm]);
+			cc_events.push(['touchend', twrite_me]);
+		}
+		function dotMode(){
+			remove_all_events();
+			c.addEventListener('touchstart',dwrite_ms,false);
+			c.addEventListener('touchmove',dwrite_mm,false);
+			c.addEventListener('touchend',dwrite_me,false);
+			c_events.push(['touchstart', dwrite_ms]);
+			c_events.push(['touchmove', dwrite_mm]);
+			c_events.push(['touchend', dwrite_me]);
+			cc.addEventListener('touchstart',dwrite_ms,false);
+			cc.addEventListener('touchmove',dwrite_mm,false);
+			cc.addEventListener('touchend',dwrite_me,false);
+			cc_events.push(['touchstart', dwrite_ms]);
+			cc_events.push(['touchmove', dwrite_mm]);
+			cc_events.push(['touchend', dwrite_me]);
+		}
+		function dwrite_ms(e){
+			e.preventDefault();
+			ctx = this.getContext('2d');
+			drawing = true;
+			touchobj = e.targetTouches[0];	
+			startX = parseInt(touchobj.clientX) - this.getBoundingClientRect().left;
+			startY = parseInt(touchobj.clientY) - this.getBoundingClientRect().top;
+			ctx.beginPath();
+			ctx.moveTo(startX,startY);
+			ctx.lineTo(startX+0.001,startY);
+			ctx.stroke();
+			ctx.closePath();
+			charStrokes.push([startX,startY]);
+			console.log(charStrokes);
+		}
+		function dwrite_mm(e){
+			console.log('moving');
+		}
+		function dwrite_me(e){
+			console.log('end');
+		}
+		function showText(){
+			var text = document.getElementById('newChar');
+			drawSample(text);
+			dotMode();
+		}
+		var c = document.getElementById('canvas1');
+		var ctx = c.getContext('2d');
+		var cc = document.getElementById('canvas2');
+		var cctx = cc.getContext('2d');
+		var drawing = false;
+		var x,y,startX,startY,endX,endY,tX,tY;
+		var touchobj;
+		var one = false;
+		var two = false;
+		var three = false;
+		var g,g1,g2,g3;
+		var img;
+		var k = 0;
+		var curPoint;
+		var pointInPath;
+		var correct = 0;
+		var curCan;
+		var undo = [];
+		var curButton = 'lol';
+		var strokingArray = [];
+		var points = [];
+		var charStrokes = [];
+		var CHAR = [];
+		var chars = [];
+		var c_events = new Array();
+		var cc_events = new Array();
+		var tempStrokingArray = [];
+		drawMode();
+		
+		function remove_all_events(){
+			for(var eventLength = 0; c_events[eventLength];eventLength++)
+			{
+				c.removeEventListener(c_events[eventLength][0],c_events[eventLength][1],false);
+				cc.removeEventListener(cc_events[eventLength][0],cc_events[eventLength][1],false);
+			}
+		}
+	
+		function clearC(){
+			c.getContext('2d').clearRect(0,0,c.width,c.height);
+			ctx = c.getContext('2d');
+			drawBackground(ctx);
+		}
+		
+		function clearCC(){
+			cctx.clearRect(0,0,cc.width,cc.height);
+			drawBackground(cctx);
+		}
+		
+		function initChar(button){
+			drawMode();
+			drawSample(button);
+			var indicator = document.getElementById('indicator');
+			indicator.innerHTML = "";
+			for(var i = 0 ; i < chars[curButton].strokes.length ; i++){
+				indicator.innerHTML += ('<h2>Step '+(i+1)+'. ');
+				img = document.createElement('img');
+				img.id = 'img'+(i+1);
+				img.src = 'image/init.jpg';
+				img.widht='50';
+				img.height='50';
+				indicator.appendChild(img);
+				indicator.innerHTML += ('</h2><br/>');
+			}
+			curCan = cctx.getImageData(0,0,c.width,c.height);
+			undo.push(curCan);
+		}
+		function drawSample(button){
+			undo.length = 0;
+			k=0;
+			correct = 0;
+			ctx = c.getContext('2d');
+			ctx.font="400px kaiti";
+			ctx.fillStyle='red';
+			ctx.clearRect(0, 0, c.width, c.height);
+			drawBackground(ctx);
+			ctx.fillText(button.value,50,400);
+			cctx.font="400px kaiti";
+			cctx.fillStyle='red';
+			cctx.clearRect(0, 0, c.width, c.height);
+			drawBackground(cctx);
+			cctx.save();
+			cctx.lineWidth = 0.5;
+			cctx.strokeStyle = '000000';
+			cctx.strokeText(button.value,50,400);
+			cctx.restore();
+			curButton = arrayObjectIndexOf(chars, button.value, "character");
+		}//ctx.fillText
+		
+		function arrayObjectIndexOf(myArray, searchTerm, property) {
+			for(var i = 0, len = myArray.length; i < len; i++) {
+			if (myArray[i][property] === searchTerm) return i;
+			}
+			return -1;
+		}
+		
+		function twrite_ms(e){
+			e.preventDefault();
+			ctx = this.getContext('2d');
+			drawing = true;
+			touchobj = e.targetTouches[0];	
+			startX = parseInt(touchobj.clientX) - this.getBoundingClientRect().left;
+			startY = parseInt(touchobj.clientY) - this.getBoundingClientRect().top;
+			ctx.beginPath();
+			ctx.moveTo(startX,startY);
+			tX = startX;
+			tY = startY;
+			
+		}
+		function twrite_mm(e){
+			e.preventDefault();
+			if(drawing){
+				touchobj = e.targetTouches[0];	
+				x = parseInt(touchobj.clientX) - this.getBoundingClientRect().left;
+				y = parseInt(touchobj.clientY) - this.getBoundingClientRect().top;
+				ctx.lineTo(x,y);
+				ctx.stroke();
+				points.push([x,y]);
+			}
+		}
+		
+		function similarity(a,b,s){
+			if(a[0]+s >= b[0] && a[0]-s <= b[0] && a[1]+s >= b[1] && a[1]-s <= b[1]){
+				return true;
+			}else return false;
+		}
+		
+		function twrite_me(e){
+			e.preventDefault();
+			endX = x;
+			endY = y;
+			ctx.closePath();
+			drawing = false;
+			curPoint = false;
+			pointInPath = 0;
+			curCan = ctx.getImageData(0,0,c.width,c.height);
+			/*
+			window.webkitRequestFileSystem(window.TEMPORARY, 1024*1024, onInitFs, errorHandler);
+			*/
+			if(curButton!= 'lol'){
+				for(var m = 0; m<chars[curButton].strokes.length; m++){//笔画数
+					for(var n = 0;n<chars[curButton].strokes[m].length;n++){
+						for(var i = 0; i<points.length;i++){//每一笔画的点数
+							if(similarity(points[i],chars[curButton].strokes[m][n],10)){
+								curPoint = true;
+							}
+						}
+						if(curPoint){
+							pointInPath++;
+							console.log('pointInPath : '+pointInPath);
+							curPoint = false;
+						}
+					}
+				}
+				
+				points = [];
+				
+				if(pointInPath >= chars[curButton].strokes[k].length){// k = curStroke >=???? should be ==
+					document.getElementById('img'+(k+1)).src = 'image/tick.jpg';
+					correct++;
+					k++;
+					undo.push(curCan);
+				}else{
+					document.getElementById('img'+(k+1)).src = 'image/cross.jpg';
+					ctx.putImageData(undo[undo.length - 1],0,0);
+				}
+				console.log("correct : "+correct);
+				if(correct == chars[curButton].strokes.length){
+					setTimeout(function(){alert("Congratulations!")},1000);
+					k = 0;
+					correct = 0;
+				}
+			}
+		}
+		function addNew(){
+			var t = document.getElementById('newChar').value;
+			var hq = {
+				"character" : t,
+				"strokes" : CHAR
+			}
+			if(t){
+				var xhr = new XMLHttpRequest();
+				xhr.open("POST", "http://192.168.1.157:8888/insert", true);//172.20.34.102  192.168.1.157
+				xhr.onreadystatechange = function(){
+				if (xhr.readyState == 4) {
+						drawMode();
+						chars.push(hq);
+						var b = document.createElement('button');
+						b.innerHTML = '<h1>'+t+"</h1>";
+						b.setAttribute('onclick','initChar(this)');
+						b.value = t;
+						console.log(b);
+						document.getElementById('chars').appendChild(b);
+					}
+				}
+				xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+				xhr.responseType  = 'JSON';
+				xhr.send(JSON.stringify(hq,null,5));
+				CHAR = [];
+			}
+			else{
+				alert('drawSomething!');
+			}
+		}
+		
+		function drawBackground(ctx){
+			ctx.save();
+			ctx.lineWidth = 2;
+			ctx.setLineDash([5]);
+			ctx.strokeStyle = "red";
+			ctx.globalAlpha = 0.2;
+			ctx.beginPath();
+			ctx.moveTo(0,0);
+			ctx.lineTo(c.width,c.height);
+			ctx.moveTo(0,c.height);
+			ctx.lineTo(c.width,0);
+			ctx.moveTo(0,c.height/2);
+			ctx.lineTo(c.width,c.height/2);
+			ctx.moveTo(c.width/2,0);
+			ctx.lineTo(c.width/2,c.height);
+			ctx.stroke();
+			ctx.closePath();
+			ctx.restore();
+		}
+		
+		ctx.lineWidth = 10;
+		ctx.lineCap="round";
+		cctx.lineWidth = 10;
+		cctx.lineCap="round";
+		drawBackground(ctx);
+		drawBackground(cctx);
+		
+		function onInitFs(fs) {
+		fs.root.getFile('hqhqhq.txt', {create: true}, function(fileEntry) {
+			// Create a FileWriter object for our FileEntry (log.txt).
+			fileEntry.createWriter(function(fileWriter) {
+
+				fileWriter.onwriteend = function(e) {
+				console.log('Write completed.');
+				};
+
+				fileWriter.onerror = function(e) {
+				console.log('Write failed: ' + e.toString());
+				};
+				// Create a new Blob and write it to log.txt.
+				var bb = new Blob(range); 
+
+				fileWriter.write(bb);
+				range.length = 0;
+
+			}, errorHandler);
+
+		}, errorHandler);
+
+		}
+		function errorHandler(){}
+		
+		var xhr = new XMLHttpRequest();
+				xhr.open("POST", "http://192.168.1.157:8888/retrieve", true);//172.20.34.102  192.168.1.157
+				xhr.onreadystatechange = function(){
+				if (xhr.readyState == 4) {
+						drawMode();
+						if(xhr.responseText == ''){
+							console.log('receive nothing');
+						}else{
+							var a = xhr.responseText.split('\n')
+							for(var i = 0;i<a.length-1;i++){
+								console.log(JSON.parse(a[i]));
+								chars.push(JSON.parse(a[i]));
+								// create buttons
+								var b = document.createElement('button');
+								b.innerHTML = '<h1>'+chars[i].character+"</h1>";
+								b.setAttribute('onclick','initChar(this)');
+								b.value = chars[i].character;
+								b.style.backgroundColor = "#f9f9f9";
+								b.style.borderRadius = "6px";
+								b.style.border = "1px solid #dcdcdc";
+								b.style.color = "#666666";
+								b.style.textShadow = "0 1px 0 #ffffff";																
+								console.log(b);
+								document.getElementById('chars').appendChild(b);
+							}
+						}
+					}
+				}
+				xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+				xhr.responseType  = 'JSON';
+				xhr.send('hq');
+	</script>
+</html>
